@@ -152,6 +152,16 @@ namespace Omegle
     SendPacket(PID_DISCONNECT);
   }
 
+  int Connection::GetUserCount() const
+  {
+    return userCount;
+  }
+
+  bool Connection::IsStrangerTyping() const
+  {
+    return strangerIsTyping;
+  }
+
   std::string Connection::PollMessage()
   {
     PacketId packetId;

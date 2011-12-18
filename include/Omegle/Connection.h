@@ -34,7 +34,6 @@ namespace Omegle
     void SendStopTyping();
     void Disconnect();
 
-
     int GetUserCount() const;
     bool IsStrangerTyping() const;
 

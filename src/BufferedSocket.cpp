@@ -78,7 +78,7 @@ namespace Omegle
     int lenRecieved = recv(sock, recvBuffer+recvBufferLen, SOCKET_MAXBUFFSIZE-recvBufferLen, 0);
     if(lenRecieved < static_cast<int>(SOCKET_MAXBUFFSIZE-recvBufferLen))
     {
-      if(errno == EAGAIN)
+      if(errno == EAGAIN || errno == 0)
       {
         if(lenRecieved >= 1)
         {
