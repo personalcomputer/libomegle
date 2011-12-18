@@ -1,7 +1,7 @@
 libomegle Readme
 ================
 
-libomegle is a little C++ library for interfacing with the 'Omegle' <http://omegle.com/> random-pairing instant messaging service.
+libomegle is a little C++ (or python with provided bindings) library for interfacing with the 'Omegle' <http://omegle.com/> random-pairing instant messaging service.
 
 See the demos, demos/omegle-cli-client.cpp and demos/basic-chatbot.cpp
 
@@ -24,6 +24,8 @@ An example chatlog courtesy of basic-chatbot:
 
 ###Build
 
-To build libomegle and the included demos, run `make` from the root directory.
+To build libomegle and the included demos, run `make libomegle demos` from the root directory.
 
-The demo omegle-cli-client depends upon C++11 threads. If it fails to build, consider updating g++, or don't worry very much about it, it won't break the library build.
+To build the python bindings, run `make python-bindings`. You will need to have [swig](http://www.swig.org/).
+
+Alternatively, download a [precompiled package](https://github.com/personalcomputer/libomegle/downloads).
