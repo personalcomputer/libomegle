@@ -28,4 +28,4 @@ To build libomegle and the included demos, run `make libomegle demos` from the r
 
 To build the python bindings, run `make python-bindings`. You will need to have [swig](http://www.swig.org/).
 
-Alternatively, download a [precompiled package](https://github.com/personalcomputer/libomegle/downloads).
+_Alternatively, download a [precompiled package](https://github.com/personalcomputer/libomegle/downloads)._
