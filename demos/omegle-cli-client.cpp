@@ -5,6 +5,8 @@
 
 #include "Omegle.h"
 
+// This demo is in the public domain and free to be used for whatever purpose.
+
 // See basic-chatbot.cpp for a well-commented use of the API. 
 
 void inputThreadMain(Omegle::Connection* omegleConnection)

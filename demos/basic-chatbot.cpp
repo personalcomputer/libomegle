@@ -4,6 +4,8 @@
 
 #include "Omegle.h"
 
+// This demo is in the public domain and free to be used for whatever purpose.
+
 /*
  * This is an extremely basic example stateless chat-bot.
  *
@@ -52,7 +54,6 @@ class BasicBot
     }
     else
     {
-      // Oh dear, we've ran out of hardcoded responses. I'm starting to panic, will he think I am stupid because I cannot come up with a response quickly? Oh god, I hope not.
       // Respond randomly from a predefined set of responses
       switch(rand()%10)
       {
