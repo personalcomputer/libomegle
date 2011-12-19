@@ -15,10 +15,10 @@ src/BufferedSocket.o: src/BufferedSocket.cpp include/Omegle/BufferedSocket.h inc
 
 demos: demos/basic-chatbot demos/omegle-cli-client
 
-demos/omegle-cli-client: demos/omegle-cli-client.cpp include/Omegle.h include/Omegle/Connection.h include/Omegle/Error.h include/Omegle/BufferedSocket.h
+demos/omegle-cli-client: libomegle demos/omegle-cli-client.cpp include/Omegle.h include/Omegle/Connection.h include/Omegle/Error.h include/Omegle/BufferedSocket.h
 	g++ demos/omegle-cli-client.cpp -Iinclude -Llib -pthread -lomegle -Wall -std=c++0x  -fno-rtti -Wl,-rpath,../lib -o $@
 
-demos/basic-chatbot: demos/basic-chatbot.cpp include/Omegle.h include/Omegle/Connection.h include/Omegle/Error.h include/Omegle/BufferedSocket.h
+demos/basic-chatbot: libomegle demos/basic-chatbot.cpp include/Omegle.h include/Omegle/Connection.h include/Omegle/Error.h include/Omegle/BufferedSocket.h
 	g++ demos/basic-chatbot.cpp -Iinclude -Llib -lomegle -Wall -fno-rtti -Wl,-rpath,../lib -o $@
 
 
