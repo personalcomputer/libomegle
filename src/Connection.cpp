@@ -54,10 +54,10 @@ namespace Omegle
     PacketId packetId;
     std::string contents;
 
-    while(!PollIncommingPackets(&packetId, &contents)); //while loop to make them block, although wasting cpu
+    PollIncommingPackets(&packetId, &contents, BLOCKING);
     if(packetId != PID_INITR2)
     {
-      while(!PollIncommingPackets(&packetId, &contents));
+      PollIncommingPackets(&packetId, &contents, BLOCKING);
       assert(packetId == PID_INITR2);
     }
 
@@ -81,50 +81,75 @@ namespace Omegle
     sock.FlushSendQueue();
   }
 
-  bool Connection::PollIncommingPackets(PacketId* packetId, std::string* contents)
+  bool Connection::PollIncommingPackets(PacketId* packetId, std::string* contents, const bool blocking)
   {
     size_t acceptedBufferLen = 0;
     size_t bufferLen;
-    void* buffer = sock.CheckRecvBuffer(&bufferLen);
+    const void* buffer;
+
+    if(!blocking)
+    {
+      buffer = sock.CheckRecvBuffer(&bufferLen);
+    }
 
     // Receive ID
     byte_t idLen;
 
-    if(bufferLen < sizeof(idLen))
+    if(blocking)
+    {
+      sock.WaitRecvBuffer(acceptedBufferLen + sizeof(idLen));
+      buffer = sock.CheckRecvBuffer(&bufferLen);
+    }
+    else if(bufferLen < sizeof(idLen))
     {
       return false;
     }
 
-    idLen = *reinterpret_cast<byte_t*>(buffer+acceptedBufferLen);
+    idLen = *reinterpret_cast<const byte_t*>(buffer+acceptedBufferLen);
     assert(idLen >= 1);
     acceptedBufferLen += sizeof(idLen);
 
-    if(bufferLen-acceptedBufferLen < idLen)
+    if(blocking)
+    {
+      sock.WaitRecvBuffer(acceptedBufferLen + idLen);
+      buffer = sock.CheckRecvBuffer(&bufferLen);
+    }
+    else if(bufferLen-acceptedBufferLen < idLen)
     {
       return false;
     }
 
-    *packetId = std::string(reinterpret_cast<char*>(buffer+acceptedBufferLen), idLen);
+    *packetId = std::string(reinterpret_cast<const char*>(buffer+acceptedBufferLen), idLen);
     acceptedBufferLen += idLen;
     
     // Receive contents
     unsigned short contentsLen;
 
-    if(bufferLen < sizeof(contentsLen))
+    if(blocking)
+    {
+      sock.WaitRecvBuffer(acceptedBufferLen + sizeof(contentsLen));
+      buffer = sock.CheckRecvBuffer(&bufferLen);
+    }
+    else if(bufferLen < sizeof(contentsLen))
     {
       return false;
     }
 
-    contentsLen = *reinterpret_cast<short*>(buffer+acceptedBufferLen);
+    contentsLen = *reinterpret_cast<const short*>(buffer+acceptedBufferLen);
     contentsLen = ntohs(contentsLen);
     acceptedBufferLen += sizeof(contentsLen);
 
-    if(bufferLen-acceptedBufferLen < contentsLen)
+    if(blocking)
+    {
+      sock.WaitRecvBuffer(acceptedBufferLen + contentsLen);
+      buffer = sock.CheckRecvBuffer(&bufferLen);
+    }
+    else if(bufferLen-acceptedBufferLen < contentsLen)
     {
       return false;
     }
     
-    *contents = std::string(reinterpret_cast<char*>(buffer+acceptedBufferLen), contentsLen);
+    *contents = std::string(reinterpret_cast<const char*>(buffer+acceptedBufferLen), contentsLen);
     acceptedBufferLen += contentsLen;
 
     sock.AcceptAndClearRecvBuffer(acceptedBufferLen);
@@ -162,12 +187,12 @@ namespace Omegle
     return strangerIsTyping;
   }
 
-  std::string Connection::PollMessage()
+  std::string Connection::PollMessage(const bool blocking)
   {
     PacketId packetId;
     std::string contents;
 
-    while(PollIncommingPackets(&packetId, &contents))
+    while(PollIncommingPackets(&packetId, &contents, blocking))
     {
       if(packetId == PID_STRANGERMESSAGE)
       {

@@ -5,6 +5,8 @@
 
 #include "Omegle.h"
 
+// See basic-chatbot.cpp for a well-commented use of the API. 
+
 void inputThreadMain(Omegle::Connection* omegleConnection)
 {
   while(true)
@@ -26,16 +28,11 @@ int main()
 
   while(true)
   {
-    usleep(100000); //prevent CPU rape //there is no blocking mode at the moment
-
     try
     {
-      std::string response = omegleConnection.PollMessage();
+      std::string response = omegleConnection.PollMessage(Omegle::BLOCKING);
 
-      if(response != "")
-      {
-        std::cout << "Stranger: " << response << std::endl; 
-      }
+      std::cout << "Stranger: " << response << std::endl;
     }
     catch(Omegle::ConversationOverError)
     {

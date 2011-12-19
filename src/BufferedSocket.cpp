@@ -36,8 +36,6 @@ namespace Omegle
 
     freeaddrinfo(res);
 
-    fcntl(sock, F_SETFL, O_NONBLOCK);
-
     recvBuffer = malloc(SOCKET_MAXBUFFSIZE);
     sendQueue = malloc(SOCKET_MAXBUFFSIZE);
   }
@@ -73,36 +71,46 @@ namespace Omegle
     return sendQueueLen;
   }
 
-  void BufferedSocket::RecvIntoBuffer()
+  void BufferedSocket::RecvIntoBuffer(const size_t requiredBufferLen)
   {
-    int lenRecieved = recv(sock, recvBuffer+recvBufferLen, SOCKET_MAXBUFFSIZE-recvBufferLen, 0);
-    if(lenRecieved < static_cast<int>(SOCKET_MAXBUFFSIZE-recvBufferLen))
+    int flags = 0;
+    if(requiredBufferLen == 0)
     {
+      flags = MSG_DONTWAIT;
+    }
+    else if(recvBufferLen >= requiredBufferLen)
+    {
+      return;
+    }
+
+    do
+    {
+      int lenRecieved = recv(sock, recvBuffer+recvBufferLen, (requiredBufferLen == 0)? SOCKET_MAXBUFFSIZE-recvBufferLen : requiredBufferLen-recvBufferLen, flags);
       if(errno == EAGAIN || errno == 0)
       {
         if(lenRecieved >= 1)
         {
           recvBufferLen += lenRecieved;
         }
-        return;
       }
       else
       {
         throw SocketError(strerror(errno));
       }
-    }
-    else
-    {
-      throw SocketError("Socket receiving buffer overflow."); //Yes - this means you must keep packets to SOCKET_MAXBUFFSIZE-1 bytes and handle them (approve&clear) before they build up.
-    }
+    } while(recvBufferLen < requiredBufferLen);
   }
 
-  void* BufferedSocket::CheckRecvBuffer(size_t* const bufferLen)
+  const void* BufferedSocket::CheckRecvBuffer(size_t* const bufferLen)
   {
     RecvIntoBuffer();
 
     *bufferLen = recvBufferLen;
     return recvBuffer;
+  }
+
+  void BufferedSocket::WaitRecvBuffer(const size_t requiredBufferLen)
+  {
+    RecvIntoBuffer(requiredBufferLen);
   }
 
   void BufferedSocket::AcceptAndClearRecvBuffer(const size_t approvedLen)

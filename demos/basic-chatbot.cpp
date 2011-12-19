@@ -100,18 +100,13 @@ int main()
 
   while(true)
   {
-    usleep(100000); //prevent CPU rape //there is no blocking mode at the moment
-
     try
     {
-      std::string message = omegleConnection.PollMessage(); //Really, the interface to libomegle is very simple. You only need this and SendMessage.
+      std::string message = omegleConnection.PollMessage(Omegle::BLOCKING); //The parameter is an optional one. BLOCKING means this function will block until a message is received, and NONBLOCKING (default) will not block, ie it will return immediately even if no messages were received (in which case it returns an empty string).
 
-      if(message != "")
-      {
-        std::cout << "Stranger: " << message << std::endl; 
+      std::cout << "Stranger: " << message << std::endl; 
 
-        bot.RespondToMessage(message);
-      }
+      bot.RespondToMessage(message);
     }
     catch(Omegle::ConversationOverError) //Omegle explicitly specifies when the stranger disconnects, although it doesn't work perfectly all the time.
     {
