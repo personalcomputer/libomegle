@@ -46,8 +46,13 @@ namespace Omegle
     void RecvIntoBuffer(const size_t requiredLen = 0);
 
     public:
-    BufferedSocket(const std::string& address, const std::string& port);
+    BufferedSocket();
     ~BufferedSocket();
+
+    void Connect(const std::string& address, const std::string& port);
+    void Disconnect();
+
+    bool IsConnected();
 
     void QueueSend(const void* const data, const size_t dataLen);
     void FlushSendQueue();

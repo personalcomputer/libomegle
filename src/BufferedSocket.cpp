@@ -17,8 +17,24 @@ namespace Omegle
 {
   static const size_t SOCKET_MAXBUFFSIZE = 5120; //5KB //can easily make this a soft limit, but it is a whole lot simpler just allocating for the max case.
 
-  BufferedSocket::BufferedSocket(const std::string& address, const std::string& port): recvBufferLen(0), sendQueueLen(0)
+  BufferedSocket::BufferedSocket(): recvBufferLen(0), sendQueueLen(0)
   {
+    recvBuffer = malloc(SOCKET_MAXBUFFSIZE);
+    sendQueue = malloc(SOCKET_MAXBUFFSIZE);
+  }
+
+  BufferedSocket::~BufferedSocket()
+  {
+    Disconnect();
+
+    free(recvBuffer);
+    free(sendQueue);
+  }
+
+  void BufferedSocket::Connect(const std::string& address, const std::string& port)
+  {
+    Disconnect();
+
     struct addrinfo hints;
     struct addrinfo* res;
 
@@ -35,17 +51,24 @@ namespace Omegle
     }
 
     freeaddrinfo(res);
-
-    recvBuffer = malloc(SOCKET_MAXBUFFSIZE);
-    sendQueue = malloc(SOCKET_MAXBUFFSIZE);
   }
 
-  BufferedSocket::~BufferedSocket()
+  void BufferedSocket::Disconnect()
   {
-    close(sock);
+    if(IsConnected())
+    {
+      close(sock);
+    }
+  }
 
-    free(recvBuffer);
-    free(sendQueue);
+  bool BufferedSocket::IsConnected()
+  {
+    if(fcntl(sock, F_GETFL) == -1)
+    {
+      assert(errno == EBADF);
+      return false;
+    }
+    return true;
   }
 
   void BufferedSocket::QueueSend(const void* const data, const size_t dataLen)

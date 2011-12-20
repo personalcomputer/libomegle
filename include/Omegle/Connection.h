@@ -27,6 +27,7 @@ namespace Omegle
   static const PacketId PID_STRANGERMESSAGE = "m"; //0x6d
   static const PacketId PID_DISCONNECT = "d"; //0x64
   static const PacketId PID_SUGGESTSPYEE = "suggestSpyee"; //This is useless for us
+  static const PacketId PID_CAPTCHA = "recaptchaRequired";
 
   struct Packet {};
 

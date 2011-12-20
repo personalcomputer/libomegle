@@ -13,13 +13,15 @@ namespace Omegle
 {
   typedef unsigned char byte_t;
 
-  static const std::string SERVERS[2] = {"bajor.omegle.com", "cardassia.omegle.com"};
+  static const int SERVER_COUNT = 2;
+
+  static const std::string SERVERS[SERVER_COUNT] = {"bajor.omegle.com", "cardassia.omegle.com"};
   static const std::string PORT = "1365";
 
   static const int INIT_PACKET_ABTEST_LENGTH = 142;
   static const std::string INIT_PACKET_STRING = "web-flash?rcs=1&spid=&abtest=";
 
-  Connection::Connection(): sock(SERVERS[0], PORT), strangerIsTyping(false), userCount(0)
+  Connection::Connection(): strangerIsTyping(false), userCount(0)
   {
     // Generate a meaningless value for omegle to track us with.
     srand(time(0));
@@ -37,20 +39,51 @@ namespace Omegle
       abtest[i] = c;
     }
 
-    // Do the little init sequence.
-    SendPacket(PID_INIT, INIT_PACKET_STRING+abtest);
+    bool connectionEstablished = false;
+    int serverIterator = 0;
 
-    PacketId packetId;
-    Packet* packet;
-
-    PollEvent(&packetId, &packet, BLOCKING);
-    if(packetId != PID_INITR2)
+    while(!connectionEstablished)
     {
-      PollEvent(&packetId, &packet, BLOCKING);
-      assert(packetId == PID_INITR2);
-    }
+      sock.Connect(SERVERS[serverIterator], PORT);
 
-    //std::cerr << "(debug) You're now chatting with a random stranger. Say hi!" << std::endl;
+      // Do the little init sequence.
+      SendPacket(PID_INIT, INIT_PACKET_STRING+abtest);
+
+      PacketId packetId;
+      Packet* packet;
+
+      PollEvent(&packetId, &packet, BLOCKING);
+      if(packetId == PID_INITR2)
+      {
+        connectionEstablished = true;
+      }
+      else if(packetId == PID_INITR1)
+      {
+        PollEvent(&packetId, &packet, BLOCKING);
+        if(packetId == PID_INITR2)
+        {
+          connectionEstablished = true;
+        }
+        else
+        {
+          throw Error("Unexpected packet received while establishing connection (\""+packetId+"\")");
+        }
+      }
+      else if(packetId == PID_CAPTCHA)
+      {
+        //Try a different server.
+        serverIterator++;
+
+        if(serverIterator >= SERVER_COUNT)
+        {
+          throw Error("Unable to solve CAPTCHA, available servers exhausted.");
+        }
+      }
+      else
+      {
+        throw Error("Unexpected packet received while establishing connection (\""+packetId+"\")");
+      }
+    }
   }
 
   void Connection::SendPacket(const PacketId& id, const std::string& contents)
@@ -184,7 +217,8 @@ namespace Omegle
          *packetId == PID_MESSAGE ||
          *packetId == PID_STRANGERMESSAGE ||
          *packetId == PID_DISCONNECT ||
-         *packetId == PID_SUGGESTSPYEE))
+         *packetId == PID_SUGGESTSPYEE ||
+         *packetId == PID_CAPTCHA))
     {
       throw Error("Unknown packet type received (" + *packetId + ((contents != "")? ")" : (", " + contents + ")")) + ".");
     }
