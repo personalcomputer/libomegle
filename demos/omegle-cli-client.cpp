@@ -7,14 +7,30 @@
 
 // This demo is in the public domain and free to be used for whatever purpose.
 
-// See basic-chatbot.cpp for a well-commented use of the API. 
+// See basic-chatbot.cpp for a well-commented introductory use of the more basic API. This demo demos the more advanced API and handling all events. 
 
 void inputThreadMain(Omegle::Connection* omegleConnection)
 {
   while(true)
   {
-    char message[257];
-    std::cin.getline(message, 256, '\n');
+    std::string message;
+      
+    char c = std::cin.get();
+    message += c;
+
+    omegleConnection->SendTyping();
+
+    while((c = std::cin.get()) != '\n')
+    {
+      message += c;
+    }
+
+    if(message == "\\quit")
+    {
+      std::cerr << "(You have disconnected)" << std::endl;
+      omegleConnection->Disconnect();
+      exit(0);
+    }
 
     omegleConnection->SendMessage(message);
     std::cout << "You: " << message << std::endl; 
@@ -28,23 +44,37 @@ int main()
 
   std::thread inputThread(inputThreadMain, &omegleConnection);
 
-  while(true)
+  try
   {
-    try
+    while(true)
     {
-      std::string response = omegleConnection.PollMessage(Omegle::BLOCKING);
+      Omegle::PacketId packetId;
+      Omegle::Packet* packet;
 
-      std::cout << "Stranger: " << response << std::endl;
+      omegleConnection.PollEvent(&packetId, &packet, Omegle::BLOCKING);
+
+      if(packetId == Omegle::PID_STRANGERMESSAGE)
+      {
+        std::cout << "Stranger: " << static_cast<Omegle::StrangerMessagePacket*>(packet)->message << std::endl;
+      }
+      else if(packetId == Omegle::PID_TYPING)
+      {
+        std::cerr << "(Stranger is typing)" << std::endl;
+      }
+      else if(packetId == Omegle::PID_STOPTYPING)
+      {
+        std::cerr << "(Stranger has stopped typing)" << std::endl;
+      }
+      else if(packetId == Omegle::PID_DISCONNECT)
+      {
+        std::cerr << "Conversational partner has disconnected." << std::endl;
+        exit(0);
+      }
     }
-    catch(Omegle::ConversationOverError)
-    {
-      std::cerr << "Conversational partner has disconnected." << std::endl;
-      exit(0);
-    }
-    catch(Omegle::SocketError)
-    {
-      std::cerr << "Network failure." << std::endl;
-      exit(0);
-    }
+  }
+  catch(Omegle::SocketError)
+  {
+    std::cerr << "Network failure." << std::endl;
+    exit(1);
   }
 }

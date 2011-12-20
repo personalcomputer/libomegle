@@ -13,24 +13,13 @@ namespace Omegle
 {
   typedef unsigned char byte_t;
 
-  static const std::string SERVER = "bajor.omegle.com";
+  static const std::string SERVERS[2] = {"bajor.omegle.com", "cardassia.omegle.com"};
   static const std::string PORT = "1365";
 
   static const int INIT_PACKET_ABTEST_LENGTH = 142;
   static const std::string INIT_PACKET_STRING = "web-flash?rcs=1&spid=&abtest=";
 
-  static const PacketId PID_INIT("omegleStart");
-  static const PacketId PID_INITR1("w"); //0x77
-  static const PacketId PID_INITR2("c"); //0x63
-  static const PacketId PID_COUNT("count");
-  static const PacketId PID_TYPING("t"); //0x74
-  static const PacketId PID_STOPTYPING("st");
-  static const PacketId PID_MESSAGE("s"); //0x73
-  static const PacketId PID_STRANGERMESSAGE("m"); //0x6d
-  static const PacketId PID_DISCONNECT("d"); //0x64
-  static const PacketId PID_SUGGESTSPYEE("suggestSpyee"); //This is useless for us
-
-  Connection::Connection(): sock(SERVER, PORT), strangerIsTyping(false), userCount(0)
+  Connection::Connection(): sock(SERVERS[0], PORT), strangerIsTyping(false), userCount(0)
   {
     // Generate a meaningless value for omegle to track us with.
     srand(time(0));
@@ -52,12 +41,12 @@ namespace Omegle
     SendPacket(PID_INIT, INIT_PACKET_STRING+abtest);
 
     PacketId packetId;
-    std::string contents;
+    Packet* packet;
 
-    PollIncommingPackets(&packetId, &contents, BLOCKING);
+    PollEvent(&packetId, &packet, BLOCKING);
     if(packetId != PID_INITR2)
     {
-      PollIncommingPackets(&packetId, &contents, BLOCKING);
+      PollEvent(&packetId, &packet, BLOCKING);
       assert(packetId == PID_INITR2);
     }
 
@@ -81,7 +70,37 @@ namespace Omegle
     sock.FlushSendQueue();
   }
 
-  bool Connection::PollIncommingPackets(PacketId* packetId, std::string* contents, const bool blocking)
+  void Connection::SendMessage(const std::string message)
+  {
+    SendPacket(PID_MESSAGE, message);
+  }
+
+  void Connection::SendTyping()
+  {
+    SendPacket(PID_TYPING);
+  }
+
+  void Connection::SendStopTyping()
+  {
+    SendPacket(PID_STOPTYPING);
+  }
+
+  void Connection::Disconnect()
+  {
+    SendPacket(PID_DISCONNECT);
+  }
+
+  int Connection::GetUserCount() const
+  {
+    return userCount;
+  }
+
+  bool Connection::IsStrangerTyping() const
+  {
+    return strangerIsTyping;
+  }
+
+  bool Connection::PollEvent(PacketId* packetId, Packet** packet, const bool blocking)
   {
     size_t acceptedBufferLen = 0;
     size_t bufferLen;
@@ -139,6 +158,8 @@ namespace Omegle
     contentsLen = ntohs(contentsLen);
     acceptedBufferLen += sizeof(contentsLen);
 
+    std::string contents;
+
     if(blocking)
     {
       sock.WaitRecvBuffer(acceptedBufferLen + contentsLen);
@@ -149,83 +170,64 @@ namespace Omegle
       return false;
     }
     
-    *contents = std::string(reinterpret_cast<const char*>(buffer+acceptedBufferLen), contentsLen);
+    contents = std::string(reinterpret_cast<const char*>(buffer+acceptedBufferLen), contentsLen);
     acceptedBufferLen += contentsLen;
 
     sock.AcceptAndClearRecvBuffer(acceptedBufferLen);
 
+    if(!(*packetId == PID_INIT ||
+         *packetId == PID_INITR1 ||
+         *packetId == PID_INITR2 ||
+         *packetId == PID_COUNT ||
+         *packetId == PID_TYPING ||
+         *packetId == PID_STOPTYPING ||
+         *packetId == PID_MESSAGE ||
+         *packetId == PID_STRANGERMESSAGE ||
+         *packetId == PID_DISCONNECT ||
+         *packetId == PID_SUGGESTSPYEE))
+    {
+      throw Error("Unknown packet type received (" + *packetId + ((contents != "")? ")" : (", " + contents + ")")) + ".");
+    }
+
+    // Handle packets based on type, parsing contents into appropriate Packet datastructure, and/or set internal get-able state (strangerIsTyping, userCount)
+    *packet = NULL;
+    if(*packetId == PID_STRANGERMESSAGE)
+    {
+      *packet = new StrangerMessagePacket(contents);
+    }
+    else if(*packetId == PID_COUNT)
+    {
+      *packet = new UserCountPacket(atoi(contents.c_str()));
+      userCount = ((UserCountPacket*)packet)->userCount;
+    }
+    else if(*packetId == PID_TYPING)
+    {
+      strangerIsTyping = true;
+    }
+    else if(*packetId == PID_STOPTYPING)
+    {
+      strangerIsTyping = false;
+    }
+
     return true;
-  }
-
-  void Connection::SendMessage(const std::string message)
-  {
-    SendPacket(PID_MESSAGE, message);
-  }
-
-  void Connection::SendTyping()
-  {
-    SendPacket(PID_TYPING);
-  }
-
-  void Connection::SendStopTyping()
-  {
-    SendPacket(PID_STOPTYPING);
-  }
-
-  void Connection::Disconnect()
-  {
-    SendPacket(PID_DISCONNECT);
-  }
-
-  int Connection::GetUserCount() const
-  {
-    return userCount;
-  }
-
-  bool Connection::IsStrangerTyping() const
-  {
-    return strangerIsTyping;
   }
 
   std::string Connection::PollMessage(const bool blocking)
   {
     PacketId packetId;
-    std::string contents;
+    Packet* packet;
 
-    while(PollIncommingPackets(&packetId, &contents, blocking))
+    while(PollEvent(&packetId, &packet, blocking))
     {
       if(packetId == PID_STRANGERMESSAGE)
       {
-        return contents;
-      }
-      else if(packetId == PID_COUNT)
-      {
-        //std::cerr << "(debug) user count: " << contents << std::endl;
-        userCount = atoi(contents.c_str());
-      }
-      else if(packetId == PID_TYPING)
-      {
-        //std::cerr << "(debug) stranger is typing" << std::endl;
-        strangerIsTyping = true;
-      }
-      else if(packetId == PID_STOPTYPING)
-      {
-        //std::cerr << "(debug) stranger stopped typing" << std::endl;
-        strangerIsTyping = false;
+        return static_cast<StrangerMessagePacket*>(packet)->message;
       }
       else if(packetId == PID_DISCONNECT)
       {
         throw ConversationOverError();
       }
-      else if(packetId == PID_SUGGESTSPYEE)
-      {
-        //useless to us
-      }
-      else
-      {
-        throw Error("Unknown packet type received (" + packetId + ((contents != "")? ")" : (", " + contents + ")")) + ".");
-      }
-    }  
+    }
 
     return "";
   }
