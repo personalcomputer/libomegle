@@ -1,23 +1,13 @@
 #pragma once
 #include <string>
-#include <exception>
+#include <stdexcept>
 
 namespace Omegle
 {
-  class Error : public std::exception
+  class Error : public std::runtime_error
   {
-    private:
-    std::string m_message;
-    
     public:
-    inline Error(const std::string message): m_message(message) {}
-    inline Error(): m_message("(no message)") {}
-    
-    inline virtual ~Error() throw() {};
-    
-    inline virtual const char* what() const throw()
-    {
-      return m_message.c_str();
-    }
+    inline Error(const std::string message): std::runtime_error(message) {}
+    inline Error(): std::runtime_error("(no message)") {}
   };
 }

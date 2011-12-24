@@ -44,7 +44,20 @@ namespace Omegle
 
     while(!connectionEstablished)
     {
-      sock.Connect(SERVERS[serverIterator], PORT);
+      if(serverIterator >= SERVER_COUNT)
+      {
+        throw Error("Available servers exhausted.");
+      }
+
+      try
+      {
+        sock.Connect(SERVERS[serverIterator], PORT);
+      }
+      catch(SocketError)
+      {
+        //Try a different server
+        serverIterator++;
+      }
 
       // Do the little init sequence.
       SendPacket(PID_INIT, INIT_PACKET_STRING+abtest);
@@ -71,19 +84,22 @@ namespace Omegle
       }
       else if(packetId == PID_CAPTCHA)
       {
-        //Try a different server.
-        serverIterator++;
+        PollEvent(&packetId, &packet, BLOCKING);
 
-        if(serverIterator >= SERVER_COUNT)
-        {
-          throw Error("Unable to solve CAPTCHA, available servers exhausted.");
-        }
+        throw Error("captcha2! (\""+packetId+"\")");
+
+        //serverIterator++;
       }
       else
       {
         throw Error("Unexpected packet received while establishing connection (\""+packetId+"\")");
       }
     }
+  }
+
+  Connection::~Connection()
+  {
+    sock.Disconnect();
   }
 
   void Connection::SendPacket(const PacketId& id, const std::string& contents)

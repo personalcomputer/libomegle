@@ -2,16 +2,11 @@
 #include <string>
 
 #include "Error.h"
+#include "Socket.h"
 
 namespace Omegle
 {
-  class SocketError : public Error {
-    public:
-    inline SocketError(const std::string message): Error(message) {}
-    inline SocketError(): Error() {}
-  };
-
-  class BufferedSocket
+  class BufferedSocket : public Socket
   /* BufferedSocket is an encapsulation of a nonblocking TCP socket. The core idea is that it buffers all data that passes through it, to give you freedom to build complete junks of data to send at once (application-level packets), and to give you freedom to wait for one of these application packets to fully assemble itself locally. It will only flush the outgoing buffer when you tell it and will only flush the incoming buffer when you are satisfied with what you've received
   
 
@@ -41,18 +36,11 @@ namespace Omegle
     void* sendQueue;
     size_t sendQueueLen; //This is not the size of the above, but instead the in-use size of the above. The total size is SOCKET_MAXBUFFSIZE.
 
-    bool blocking;
-
     void RecvIntoBuffer(const size_t requiredLen = 0);
 
     public:
     BufferedSocket();
-    ~BufferedSocket();
-
-    void Connect(const std::string& address, const std::string& port);
-    void Disconnect();
-
-    bool IsConnected();
+    virtual ~BufferedSocket();
 
     void QueueSend(const void* const data, const size_t dataLen);
     void FlushSendQueue();

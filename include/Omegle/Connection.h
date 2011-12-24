@@ -6,9 +6,6 @@
 
 namespace Omegle
 {
-  static const bool BLOCKING = true;
-  static const bool NONBLOCKING = false;
-
   class ConversationOverError : public Error {
     public:
     inline ConversationOverError(const std::string message): Error(message) {}
@@ -54,6 +51,7 @@ namespace Omegle
 
     public:
     Connection();
+    ~Connection();
 
     void SendMessage(const std::string message);
     void SendTyping();

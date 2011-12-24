@@ -1,11 +1,5 @@
 #include <cstring>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <cstdlib>
-#include <unistd.h>
-#include <fcntl.h>
-#include <cerrno>
 #include <cassert>
 #include <string>
 
@@ -31,46 +25,6 @@ namespace Omegle
     free(sendQueue);
   }
 
-  void BufferedSocket::Connect(const std::string& address, const std::string& port)
-  {
-    Disconnect();
-
-    struct addrinfo hints;
-    struct addrinfo* res;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-
-    if((getaddrinfo(address.c_str(), port.c_str(), &hints, &res) != 0) ||
-      ((sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1) ||
-      (connect(sock, res->ai_addr, res->ai_addrlen) != 0))
-    {
-      freeaddrinfo(res);
-      throw SocketError(strerror(errno));
-    }
-
-    freeaddrinfo(res);
-  }
-
-  void BufferedSocket::Disconnect()
-  {
-    if(IsConnected())
-    {
-      close(sock);
-    }
-  }
-
-  bool BufferedSocket::IsConnected()
-  {
-    if(fcntl(sock, F_GETFL) == -1)
-    {
-      assert(errno == EBADF);
-      return false;
-    }
-    return true;
-  }
-
   void BufferedSocket::QueueSend(const void* const data, const size_t dataLen)
   {
     assert(sendQueueLen + dataLen <= SOCKET_MAXBUFFSIZE);
@@ -81,11 +35,7 @@ namespace Omegle
 
   void BufferedSocket::FlushSendQueue()
   {
-    if(send(sock, sendQueue, sendQueueLen, 0) < static_cast<ssize_t>(sendQueueLen))
-    {
-      throw SocketError(strerror(errno));
-    }
-
+    Send(sendQueue, sendQueueLen);
     sendQueueLen = 0;
   }
 
@@ -96,31 +46,14 @@ namespace Omegle
 
   void BufferedSocket::RecvIntoBuffer(const size_t requiredBufferLen)
   {
-    int flags = 0;
-    if(requiredBufferLen == 0)
-    {
-      flags = MSG_DONTWAIT;
-    }
-    else if(recvBufferLen >= requiredBufferLen)
+    if((requiredBufferLen != 0) && (recvBufferLen >= requiredBufferLen))
     {
       return;
     }
 
-    do
-    {
-      int lenRecieved = recv(sock, recvBuffer+recvBufferLen, (requiredBufferLen == 0)? SOCKET_MAXBUFFSIZE-recvBufferLen : requiredBufferLen-recvBufferLen, flags);
-      if(errno == EAGAIN || errno == 0)
-      {
-        if(lenRecieved >= 1)
-        {
-          recvBufferLen += lenRecieved;
-        }
-      }
-      else
-      {
-        throw SocketError(strerror(errno));
-      }
-    } while(recvBufferLen < requiredBufferLen);
+    recvBufferLen += Recv(recvBuffer+recvBufferLen, (requiredBufferLen == 0)? SOCKET_MAXBUFFSIZE-recvBufferLen : requiredBufferLen-recvBufferLen, (requiredBufferLen == 0)? NONBLOCKING : BLOCKING);
+
+    assert(recvBufferLen >= requiredBufferLen);
   }
 
   const void* BufferedSocket::CheckRecvBuffer(size_t* const bufferLen)
