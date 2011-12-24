@@ -13,9 +13,9 @@ namespace Omegle
 {
   typedef unsigned char byte_t;
 
-  static const int SERVER_COUNT = 2;
+  static const int SERVER_COUNT = 3;
 
-  static const std::string SERVERS[SERVER_COUNT] = {"bajor.omegle.com", "cardassia.omegle.com"};
+  static const std::string SERVERS[SERVER_COUNT] = {"bajor.omegle.com", "promenade.omegle.com", "cardassia.omegle.com"};
   static const std::string PORT = "1365";
 
   static const int INIT_PACKET_ABTEST_LENGTH = 142;
