@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <arpa/inet.h>
 #include <time.h>
+#include <iostream>
 
 #include "Error.h"
 #include "BufferedSocket.h"
@@ -13,15 +14,13 @@ namespace Omegle
 {
   typedef unsigned char byte_t;
 
-  static const int SERVER_COUNT = 3;
-
   static const std::string SERVERS[SERVER_COUNT] = {"bajor.omegle.com", "promenade.omegle.com", "cardassia.omegle.com"};
   static const std::string PORT = "1365";
 
   static const int INIT_PACKET_ABTEST_LENGTH = 142;
   static const std::string INIT_PACKET_STRING = "web-flash?rcs=1&spid=&abtest=";
 
-  Connection::Connection(): strangerIsTyping(false), userCount(0)
+  Connection::Connection(const int serverId): strangerIsTyping(false), userCount(0)
   {
     // Generate a meaningless value for omegle to track us with.
     srand(time(0));
@@ -39,56 +38,29 @@ namespace Omegle
       abtest[i] = c;
     }
 
-    bool connectionEstablished = false;
-    int serverIterator = 0;
 
-    while(!connectionEstablished)
+    sock.Connect(SERVERS[serverId], PORT);
+
+    // Do the little init sequence.
+    SendPacket(PID_INIT, INIT_PACKET_STRING+abtest);
+
+    PacketId packetId;
+    Packet* packet;
+
+    PollEvent(&packetId, &packet, BLOCKING);
+    if(packetId != PID_INITR2)
     {
-      if(serverIterator >= SERVER_COUNT)
-      {
-        throw Error("Available servers exhausted.");
-      }
-
-      try
-      {
-        sock.Connect(SERVERS[serverIterator], PORT);
-      }
-      catch(SocketError)
-      {
-        //Try a different server
-        serverIterator++;
-      }
-
-      // Do the little init sequence.
-      SendPacket(PID_INIT, INIT_PACKET_STRING+abtest);
-
-      PacketId packetId;
-      Packet* packet;
-
-      PollEvent(&packetId, &packet, BLOCKING);
-      if(packetId == PID_INITR2)
-      {
-        connectionEstablished = true;
-      }
-      else if(packetId == PID_INITR1)
+      if(packetId == PID_INITR1)
       {
         PollEvent(&packetId, &packet, BLOCKING);
-        if(packetId == PID_INITR2)
-        {
-          connectionEstablished = true;
-        }
-        else
+        if(packetId != PID_INITR2)
         {
           throw Error("Unexpected packet received while establishing connection (\""+packetId+"\")");
         }
       }
       else if(packetId == PID_CAPTCHA)
       {
-        PollEvent(&packetId, &packet, BLOCKING);
-
-        throw Error("captcha2! (\""+packetId+"\")");
-
-        //serverIterator++;
+        throw CaptchaError(((CaptchaPacket*)packet)->key);
       }
       else
       {
@@ -249,6 +221,17 @@ namespace Omegle
     {
       *packet = new UserCountPacket(atoi(contents.c_str()));
       userCount = ((UserCountPacket*)packet)->userCount;
+    }
+    else if(*packetId == PID_CAPTCHA)
+    {
+      size_t delim = contents.find_first_of("=");
+      assert(delim != std::string::npos);
+      delim++;
+      assert(contents.substr(0,delim) == "publicKey=");
+
+      std::string key = contents.substr(delim, contents.length()-delim);
+
+      *packet = new CaptchaPacket(key);
     }
     else if(*packetId == PID_TYPING)
     {

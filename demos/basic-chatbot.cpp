@@ -92,16 +92,16 @@ int main()
 {
   srand(time(0));
 
-  Omegle::Connection omegleConnection; //This connects to the omegle server and will block until omegle connects us through to a stranger
-  std::cerr << "(connected)" << std::endl;
-
-  BasicBot bot(omegleConnection);
-
-  bot.StartConversation();
-
-  while(true)
+  try
   {
-    try
+    Omegle::Connection omegleConnection; //This connects to the omegle server and will block until omegle connects us through to a stranger
+    std::cerr << "(connected)" << std::endl;
+
+    BasicBot bot(omegleConnection);
+
+    bot.StartConversation();
+
+    while(true)
     {
       std::string message = omegleConnection.PollMessage(Omegle::BLOCKING); //The parameter is an optional one. BLOCKING means this function will block until a message is received, and NONBLOCKING (default) will not block, ie it will return immediately even if no messages were received (in which case it returns an empty string).
 
@@ -109,15 +109,19 @@ int main()
 
       bot.RespondToMessage(message);
     }
-    catch(Omegle::ConversationOverError) //Omegle explicitly specifies when the stranger disconnects, although it doesn't work perfectly all the time.
-    {
-      std::cerr << "(stranger disconnected)" << std::endl;
-      return 0;
-    }
-    catch(Omegle::SocketError)
-    {
-      std::cerr << "(network failure)" << std::endl;
-      return 0;
-    }
   }
+  catch(Omegle::ConversationOverError) //Omegle explicitly specifies when the stranger disconnects, although it doesn't work perfectly all the time.
+  {
+    std::cerr << "(stranger disconnected)" << std::endl;
+  }
+  catch(Omegle::SocketError)
+  {
+    std::cerr << "(network failure)" << std::endl;
+  }
+  catch(Omegle::CaptchaError)
+  {
+    std::cerr << "(chatbot foiled by mortal enemy CAPTCHA)" << std::endl;
+  }
+
+  return 0;
 }

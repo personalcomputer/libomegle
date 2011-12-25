@@ -28,8 +28,6 @@ namespace Omegle
   
   {
     private:
-    int sock;
-
     void* recvBuffer;
     size_t recvBufferLen; //This is not the size of the above, but instead the in-use size of the above. The total size is SOCKET_MAXBUFFSIZE.
 

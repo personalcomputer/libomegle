@@ -77,4 +77,9 @@ int main()
     std::cerr << "Network failure." << std::endl;
     exit(1);
   }
+  catch(Omegle::CaptchaError)
+  {
+    std::cerr << "CAPTCHA required. (It simply isn't practical or really possible to get the CAPTCHA and display it in this CLI environment. Therefore, this is fatal until resolved elsewhere.)" << std::endl;
+    exit(1);
+  }
 }

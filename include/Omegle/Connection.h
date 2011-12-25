@@ -12,6 +12,12 @@ namespace Omegle
     inline ConversationOverError(): Error() {}
   };
 
+  class CaptchaError : public Error {
+    public:
+    inline CaptchaError(const std::string message): Error(message) {}
+    inline CaptchaError(): Error() {}
+  };
+
   typedef std::string PacketId;
 
   static const PacketId PID_INIT = "omegleStart";
@@ -38,6 +44,13 @@ namespace Omegle
     StrangerMessagePacket(const std::string message): message(message) {}
     std::string message;
   };
+  struct CaptchaPacket : public Packet
+  {
+    CaptchaPacket(const std::string key): key(key) {} //To use this key for all intents and purposes you'll have to use the recaptcha API. Like, http://api.recaptcha.net/js/recaptcha_ajax.js
+    std::string key;
+  };
+
+  static const int SERVER_COUNT = 3;
 
   class Connection
   {
@@ -50,7 +63,7 @@ namespace Omegle
     void SendPacket(const PacketId& packetId, const std::string& contents = "");
 
     public:
-    Connection();
+    Connection(const int serverId = 0);
     ~Connection();
 
     void SendMessage(const std::string message);
