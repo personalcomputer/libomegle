@@ -15,6 +15,8 @@ namespace Omegle
   static const bool BLOCKING = true;
   static const bool NONBLOCKING = false;
 
+  typedef unsigned char ubyte_t;
+
   class Socket
   /* Socket is nothing more than an encapsulation of basic socket functionality with a little less C and little more C++. */
   {

@@ -29,7 +29,7 @@ namespace Omegle
   {
     assert(sendQueueLen + dataLen <= SOCKET_MAXBUFFSIZE);
 
-    memcpy(sendQueue+sendQueueLen, data, dataLen);
+    memcpy((ubyte_t*)sendQueue+sendQueueLen, data, dataLen);
     sendQueueLen += dataLen;
   }
 
@@ -51,7 +51,7 @@ namespace Omegle
       return;
     }
 
-    recvBufferLen += Recv(recvBuffer+recvBufferLen, (requiredBufferLen == 0)? SOCKET_MAXBUFFSIZE-recvBufferLen : requiredBufferLen-recvBufferLen, (requiredBufferLen == 0)? NONBLOCKING : BLOCKING);
+    recvBufferLen += Recv((ubyte_t*)recvBuffer+recvBufferLen, (requiredBufferLen == 0)? SOCKET_MAXBUFFSIZE-recvBufferLen : requiredBufferLen-recvBufferLen, (requiredBufferLen == 0)? NONBLOCKING : BLOCKING);
 
     assert(recvBufferLen >= requiredBufferLen);
   }
@@ -73,6 +73,6 @@ namespace Omegle
   {
     recvBufferLen -= approvedLen;
 
-    memmove(recvBuffer, recvBuffer+approvedLen, recvBufferLen); //Pretty certain memcpy will have no problems doing this as well, despite the overlap, but I hardly need that performance.
+    memmove(recvBuffer, (ubyte_t*)recvBuffer+approvedLen, recvBufferLen); //Pretty certain memcpy will have no problems doing this as well, despite the overlap, but I hardly need that performance.
   }
 }

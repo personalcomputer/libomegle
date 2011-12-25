@@ -74,7 +74,7 @@ namespace Omegle
 
       while(totalReceived < len)
       {
-        ssize_t lenReceived = recv(sock, buf+totalReceived, len-totalReceived, 0);
+        ssize_t lenReceived = recv(sock, (ubyte_t*)buf+totalReceived, len-totalReceived, 0);
 
         if(lenReceived < 0)
         {

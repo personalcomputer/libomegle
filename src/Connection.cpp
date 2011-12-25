@@ -12,8 +12,6 @@
 
 namespace Omegle
 {
-  typedef unsigned char byte_t;
-
   static const std::string SERVERS[SERVER_COUNT] = {"bajor.omegle.com", "promenade.omegle.com", "cardassia.omegle.com"};
   static const std::string PORT = "1365";
 
@@ -77,7 +75,7 @@ namespace Omegle
   void Connection::SendPacket(const PacketId& id, const std::string& contents)
   {
     // Send ID
-    byte_t idLen = id.length();
+    ubyte_t idLen = id.length();
     sock.QueueSend(&idLen, sizeof(idLen));
     sock.QueueSend(id.data(), idLen);
 
@@ -133,7 +131,7 @@ namespace Omegle
     }
 
     // Receive ID
-    byte_t idLen;
+    ubyte_t idLen;
 
     if(blocking)
     {
@@ -145,7 +143,7 @@ namespace Omegle
       return false;
     }
 
-    idLen = *reinterpret_cast<const byte_t*>(buffer+acceptedBufferLen);
+    idLen = *reinterpret_cast<const ubyte_t*>((ubyte_t*)buffer+acceptedBufferLen);
     assert(idLen >= 1);
     acceptedBufferLen += sizeof(idLen);
 
@@ -159,7 +157,7 @@ namespace Omegle
       return false;
     }
 
-    *packetId = std::string(reinterpret_cast<const char*>(buffer+acceptedBufferLen), idLen);
+    *packetId = std::string(reinterpret_cast<const char*>((ubyte_t*)buffer+acceptedBufferLen), idLen);
     acceptedBufferLen += idLen;
     
     // Receive contents
@@ -175,7 +173,7 @@ namespace Omegle
       return false;
     }
 
-    contentsLen = *reinterpret_cast<const short*>(buffer+acceptedBufferLen);
+    contentsLen = *reinterpret_cast<const short*>((ubyte_t*)buffer+acceptedBufferLen);
     contentsLen = ntohs(contentsLen);
     acceptedBufferLen += sizeof(contentsLen);
 
@@ -191,7 +189,7 @@ namespace Omegle
       return false;
     }
     
-    contents = std::string(reinterpret_cast<const char*>(buffer+acceptedBufferLen), contentsLen);
+    contents = std::string(reinterpret_cast<const char*>((ubyte_t*)buffer+acceptedBufferLen), contentsLen);
     acceptedBufferLen += contentsLen;
 
     sock.AcceptAndClearRecvBuffer(acceptedBufferLen);
