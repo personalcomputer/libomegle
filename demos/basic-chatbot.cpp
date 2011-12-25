@@ -114,9 +114,9 @@ int main()
   {
     std::cerr << "(stranger disconnected)" << std::endl;
   }
-  catch(Omegle::SocketError)
+  catch(Omegle::SocketError& e)
   {
-    std::cerr << "(network failure)" << std::endl;
+    std::cerr << "(network failure)(" << e.errnoMessage << ")" << std::endl;
   }
   catch(Omegle::CaptchaError)
   {

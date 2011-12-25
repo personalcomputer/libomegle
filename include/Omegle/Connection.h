@@ -8,14 +8,15 @@ namespace Omegle
 {
   class ConversationOverError : public Error {
     public:
-    inline ConversationOverError(const std::string message): Error(message) {}
-    inline ConversationOverError(): Error() {}
+    inline ConversationOverError(): Error("conversation over") {}
+    inline virtual ~ConversationOverError() throw() {};
   };
 
   class CaptchaError : public Error {
     public:
-    inline CaptchaError(const std::string message): Error(message) {}
-    inline CaptchaError(): Error() {}
+    std::string key;
+    inline CaptchaError(const std::string key): Error("captcha required, recaptcha key: "+key), key(key) {}
+    inline virtual ~CaptchaError() throw() {};
   };
 
   typedef std::string PacketId;

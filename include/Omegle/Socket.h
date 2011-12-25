@@ -7,8 +7,9 @@ namespace Omegle
 {
   class SocketError : public Error {
     public:
-    inline SocketError(const std::string message): Error(message) {}
-    inline SocketError(): Error() {}
+    std::string errnoMessage;
+    inline SocketError(const std::string errnoMessage): Error("network error: "+errnoMessage), errnoMessage(errnoMessage) {}
+    inline virtual ~SocketError() throw() {};
   };
 
   static const bool BLOCKING = true;
