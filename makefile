@@ -1,4 +1,4 @@
-all: libomegle demos python-bindings perl-bindings
+all: libomegle demos python-bindings
 
 
 libomegle: lib/libomegle.so
