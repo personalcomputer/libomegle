@@ -51,7 +51,8 @@ namespace Omegle
     std::string key;
   };
 
-  static const int SERVER_COUNT = 3;
+  static const unsigned int SERVER_COUNT = 3;
+  typedef unsigned int ServerId_t;
 
   class Connection
   {
@@ -64,7 +65,7 @@ namespace Omegle
     void SendPacket(const PacketId& packetId, const std::string& contents = "");
 
     public:
-    Connection(const int serverId = 0);
+    Connection(const ServerId_t serverId = 0);
     ~Connection();
 
     void SendMessage(const std::string message);

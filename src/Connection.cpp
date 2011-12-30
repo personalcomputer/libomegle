@@ -18,7 +18,7 @@ namespace Omegle
   static const int INIT_PACKET_ABTEST_LENGTH = 142;
   static const std::string INIT_PACKET_STRING = "web-flash?rcs=1&spid=&abtest=";
 
-  Connection::Connection(const int serverId): strangerIsTyping(false), userCount(0)
+  Connection::Connection(const ServerId_t serverId): strangerIsTyping(false), userCount(0)
   {
     // Generate a meaningless value for omegle to track us with.
     srand(time(0));
@@ -106,7 +106,13 @@ namespace Omegle
 
   void Connection::Disconnect()
   {
-    SendPacket(PID_DISCONNECT);
+    try
+    {
+      SendPacket(PID_DISCONNECT);
+    }
+    catch(SocketError) {}
+
+    sock.Disconnect();
   }
 
   int Connection::GetUserCount() const

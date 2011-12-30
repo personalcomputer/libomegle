@@ -1,4 +1,4 @@
-all: libomegle demos python-bindings
+all: libomegle demos python-bindings perl-bindings
 
 
 libomegle: lib/libomegle.so
@@ -35,6 +35,18 @@ python-bindings/src/omegle_wrap.o: python-bindings/src/omegle_wrap.cpp
  
 python-bindings/_omegle.so: python-bindings/src/omegle_wrap.o src/Connection.o src/BufferedSocket.o src/Socket.o
 	g++ -shared -Wl,-soname,_omegle.so -Wall python-bindings/src/omegle_wrap.o src/Connection.o src/BufferedSocket.o src/Socket.o -o $@
+
+
+perl-bindings: perl-bindings/_omegle.so
+
+perl-bindings/omegle.py perl-bindings/src/omegle_wrap.cpp: perl-bindings/src/omegle.i include/Omegle.h include/Omegle/Connection.h include/Omegle/Error.h include/Omegle/BufferedSocket.h include/Omegle/Socket.h
+	swig -c++ -perl -outdir perl-bindings -o perl-bindings/src/omegle_wrap.cpp perl-bindings/src/omegle.i
+
+perl-bindings/src/omegle_wrap.o: perl-bindings/src/omegle_wrap.cpp
+	g++ -fpic -c perl-bindings/src/omegle_wrap.cpp -Wall -I/usr/lib/perl/5.12.4/CORE `perl -MConfig -e 'print join(" ", @Config{qw(ccflags optimize cccdlflags)}, "-I$Config{archlib}/CORE")'` -fno-rtti -o $@
+ 
+perl-bindings/_omegle.so: perl-bindings/src/omegle_wrap.o src/Connection.o src/BufferedSocket.o src/Socket.o
+	g++ -shared -Wl,-soname,_omegle.so -Wall `perl -MConfig -e 'print $Config{lddlflags}'` perl-bindings/src/omegle_wrap.o src/Connection.o src/BufferedSocket.o src/Socket.o -o $@
 
 
 clean:
