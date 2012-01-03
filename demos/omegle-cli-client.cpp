@@ -57,7 +57,7 @@ int main()
           {
             std::cerr << "(You have disconnected)" << std::endl;
             omegleConnection.Disconnect();
-            exit(0);
+            return 0;
           }
 
           omegleConnection.SendMessage(message);
@@ -77,7 +77,7 @@ int main()
       {
         std::cerr << "(You have disconnected)" << std::endl;
         omegleConnection.Disconnect();
-        exit(0);
+        return 0;
       }
 
       // Handle packets
@@ -101,18 +101,18 @@ int main()
       else if(packetId == Omegle::PID_DISCONNECT)
       {
         std::cerr << "Conversational partner has disconnected." << std::endl;
-        exit(0);
+        return 0;
       }
     }
   }
   catch(Omegle::NetworkError& e)
   {
     std::cerr << "(network failure: " << e.errnoMessage << ")" << std::endl;
-    exit(1);
+    return 1;
   }
   catch(Omegle::CaptchaError)
   {
     std::cerr << "CAPTCHA required. (It simply isn't practical or really possible to get the CAPTCHA and display it in this CLI environment. Therefore, this is fatal until resolved elsewhere.)" << std::endl;
-    exit(1);
+    return 1;
   }
 }
