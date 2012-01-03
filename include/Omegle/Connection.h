@@ -75,7 +75,7 @@ namespace Omegle
 
     ##### Servers
 
-    Omegle operates 4 (known) servers to handle their load. The servers store bans and their CAPTCHA requirements separately for each server. This means if you would like to avoid such bans, you can connect to a different server. The available servers are "bajor.omegle.com", "promenade.omegle.com", "cardassia.omegle.com", and "quarks.omegle.com". These can be selected when creating a connection by specifying the serverId to be either SERVER_BAJOR, SERVER_PROMENADE, or SERVER_CARDASSIA. bajor is preferred by default.
+    Omegle operates 4 (known) servers to handle their load. The servers store bans and their CAPTCHA requirements separately for each server. This means if you would like to avoid such bans, you can connect to a different server. The available servers are "bajor.omegle.com", "promenade.omegle.com", "cardassia.omegle.com", and "quarks.omegle.com". These can be selected when creating a connection by specifying the serverId to be either SERVER_BAJOR, SERVER_PROMENADE, SERVER_QUARKS, or SERVER_CARDASSIA. bajor is preferred by default.
     
     ##### Raw Packet Handler
 

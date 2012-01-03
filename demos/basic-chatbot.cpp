@@ -30,6 +30,7 @@ class BasicBot
     omegleConnection.SendTyping(); //This will pop up the 'Stranger is typing..' notice to the other stranger
     usleep(800000); //Take almost a second to fake typing
     omegleConnection.SendMessage("Hi");
+    std::cout << "(Bot): Hi" << std::endl; 
     omegleConnection.SendStopTyping(); //Note that SendTyping and SendStopTyping are totally unnecessary. They are simply here to create the illusion of being a real person, as if the stranger can't already see through our less than intelligent dialog.
   }
 
