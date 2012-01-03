@@ -20,12 +20,11 @@ namespace Omegle
 
   static const int CHARACTERS_IN_ALPHABET = 26;
 
-
   char RandomAlphanumericChar()
   {
-    char c = (rand()%(CHARACTERS_IN_ALPHABET+10))+('a'-10); //Generate a random lowercase letter, although it may be up to ten characters off. These will be converted to numbers.
+    char c = (rand()%(CHARACTERS_IN_ALPHABET+10))+('a'-10); //Generate a random lowercase letter, although it may be up to ten characters off. These offset characters will be converted to numbers.
 
-    if(c < 'a') //If it is one of the off-characters (not a letter)
+    if(c < 'a') //If it is one of the offset-characters (not a letter)
     {
       c -= ('a'-1) - '9'; //move in into the range of numbers
     }

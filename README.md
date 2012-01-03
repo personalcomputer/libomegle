@@ -26,6 +26,10 @@ An example chatlog courtesy of basic-chatbot:
 
 To build libomegle and the included demos, run `make libomegle demos` from the root directory.
 
-To build the python bindings, run `make python-bindings`. You will need to have [swig](http://www.swig.org/).
+To build the python bindings, run `make python-bindings`. You will need to have [swig](http://www.swig.org/) and development headers for python (the makefile targets 2.7, but this can be changed).
 
 _Alternatively, download a [precompiled package](https://github.com/personalcomputer/libomegle/downloads)._
+
+###Install
+
+Install libomegle to /usr/local/: (as root) `make install`

@@ -36,6 +36,8 @@ python-bindings/src/omegle_wrap.o: python-bindings/src/omegle_wrap.cpp
 python-bindings/_omegle.so: python-bindings/src/omegle_wrap.o src/Connection.o src/BufferedSocket.o src/Socket.o
 	g++ -shared -Wl,-soname,_omegle.so -Wall python-bindings/src/omegle_wrap.o src/Connection.o src/BufferedSocket.o src/Socket.o -o $@
 
+install: lib/libomegle.so
+	mkdir -p /usr/local/include && mkdir -p /usr/local/lib && cp lib/libomegle.so /usr/local/lib/ && cp -R include/* /usr/local/include/
 
 clean:
 	rm -f demos/omegle-cli-client demos/basic-chatbot src/*.o lib/libomegle.so python-bindings/_omegle.so python-bindings/omegle.py python-bindings/src/omegle_wrap.cpp python-bindings/src/omegle_wrap.o
