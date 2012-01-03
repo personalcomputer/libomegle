@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cassert>
 #include <string>
+#include <cstring>
 
 #include "Error.h"
 
@@ -42,7 +43,7 @@ namespace Omegle
       (connect(sock, res->ai_addr, res->ai_addrlen) != 0))
     {
       freeaddrinfo(res);
-      throw SocketError(strerror(errno));
+      throw NetworkError(errno);
     }
 
     freeaddrinfo(res);
@@ -56,7 +57,7 @@ namespace Omegle
     }
   }
 
-  bool Socket::IsConnected()
+  bool Socket::IsConnected() const
   {
     if(fcntl(sock, F_GETFL) == -1)
     {
@@ -78,7 +79,7 @@ namespace Omegle
 
         if(lenReceived < 0)
         {
-          throw SocketError(strerror(errno));
+          throw NetworkError(errno);
         }
 
         totalReceived += lenReceived;
@@ -90,11 +91,11 @@ namespace Omegle
     {
       ssize_t lenReceived = recv(sock, buf, len, MSG_DONTWAIT);
 
-      if(lenReceived < len)
+      if(lenReceived < static_cast<ssize_t>(len))
       {
         if(errno && (errno != EAGAIN))
         {
-          throw SocketError(strerror(errno));
+          throw NetworkError(errno);
         }
       }
       
@@ -113,7 +114,7 @@ namespace Omegle
   {
     if(send(sock, buf, len, MSG_NOSIGNAL) < static_cast<ssize_t>(len))
     {
-      throw SocketError(strerror(errno));
+      throw NetworkError(errno);
     }
   }
 }

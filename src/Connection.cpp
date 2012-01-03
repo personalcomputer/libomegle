@@ -18,6 +18,21 @@ namespace Omegle
   static const int INIT_PACKET_ABTEST_LENGTH = 142;
   static const std::string INIT_PACKET_STRING = "web-flash?rcs=1&spid=&abtest=";
 
+  static const int CHARACTERS_IN_ALPHABET = 26;
+
+
+  char RandomAlphanumericChar()
+  {
+    char c = (rand()%(CHARACTERS_IN_ALPHABET+10))+('a'-10); //Generate a random lowercase letter, although it may be up to ten characters off. These will be converted to numbers.
+
+    if(c < 'a') //If it is one of the off-characters (not a letter)
+    {
+      c -= ('a'-1) - '9'; //move in into the range of numbers
+    }
+
+    return c;
+  }
+
   Connection::Connection(const ServerId_t serverId): strangerIsTyping(false), userCount(0)
   {
     // Generate a meaningless value for omegle to track us with.
@@ -26,14 +41,7 @@ namespace Omegle
     std::string abtest(INIT_PACKET_ABTEST_LENGTH, 'a');
     for(int i = 0; i < INIT_PACKET_ABTEST_LENGTH; ++i)
     {
-      char c = (rand()%(26+10))+(97-10); //Generate a random lowercase letter, although it may be up to ten characters off. These will be converted to numbers.
-
-      if(c < 97)
-      {
-        c -= 39;
-      }
-
-      abtest[i] = c;
+      abtest[i] = RandomAlphanumericChar();
     }
 
 
@@ -44,17 +52,11 @@ namespace Omegle
 
     PacketId packetId;
     Packet* packet;
-
-    PollEvent(&packetId, &packet, BLOCKING);
-    if(packetId != PID_INITR2)
+    while(PollEvent(&packetId, &packet, BLOCKING) && (packetId != PID_CONNECTED))
     {
-      if(packetId == PID_INITR1)
+      if(packetId == PID_WAIT)
       {
-        PollEvent(&packetId, &packet, BLOCKING);
-        if(packetId != PID_INITR2)
-        {
-          throw Error("Unexpected packet received while establishing connection (\""+packetId+"\")");
-        }
+        continue;
       }
       else if(packetId == PID_CAPTCHA)
       {
@@ -96,7 +98,7 @@ namespace Omegle
 
   void Connection::SendTyping()
   {
-    SendPacket(PID_TYPING);
+    SendPacket(PID_STARTTYPING);
   }
 
   void Connection::SendStopTyping()
@@ -110,7 +112,7 @@ namespace Omegle
     {
       SendPacket(PID_DISCONNECT);
     }
-    catch(SocketError) {}
+    catch(NetworkError) {}
 
     sock.Disconnect();
   }
@@ -125,8 +127,10 @@ namespace Omegle
     return strangerIsTyping;
   }
 
-  bool Connection::PollEvent(PacketId* packetId, Packet** packet, const bool blocking)
+  bool Connection::PollEvent(PacketId* const packetId, Packet** const packet, const bool blocking)
   {
+    assert(packetId && packet);
+
     size_t acceptedBufferLen = 0;
     size_t bufferLen;
     const void* buffer;
@@ -201,10 +205,10 @@ namespace Omegle
     sock.AcceptAndClearRecvBuffer(acceptedBufferLen);
 
     if(!(*packetId == PID_INIT ||
-         *packetId == PID_INITR1 ||
-         *packetId == PID_INITR2 ||
-         *packetId == PID_COUNT ||
-         *packetId == PID_TYPING ||
+         *packetId == PID_WAIT ||
+         *packetId == PID_CONNECTED ||
+         *packetId == PID_USERCOUNT ||
+         *packetId == PID_STARTTYPING ||
          *packetId == PID_STOPTYPING ||
          *packetId == PID_MESSAGE ||
          *packetId == PID_STRANGERMESSAGE ||
@@ -215,13 +219,13 @@ namespace Omegle
       throw Error("Unknown packet type received (" + *packetId + ((contents != "")? ")" : (", " + contents + ")")) + ".");
     }
 
-    // Handle packets based on type, parsing contents into appropriate Packet datastructure, and/or set internal get-able state (strangerIsTyping, userCount)
+    // Handle packets based on type, parsing contents into appropriate Packet datastructure, set internal request-able state (strangerIsTyping, userCount), and in the case of PID_DISCONNECT, closing the underlying socket.
     *packet = NULL;
     if(*packetId == PID_STRANGERMESSAGE)
     {
       *packet = new StrangerMessagePacket(contents);
     }
-    else if(*packetId == PID_COUNT)
+    else if(*packetId == PID_USERCOUNT)
     {
       *packet = new UserCountPacket(atoi(contents.c_str()));
       userCount = ((UserCountPacket*)packet)->userCount;
@@ -237,13 +241,17 @@ namespace Omegle
 
       *packet = new CaptchaPacket(key);
     }
-    else if(*packetId == PID_TYPING)
+    else if(*packetId == PID_STARTTYPING)
     {
       strangerIsTyping = true;
     }
     else if(*packetId == PID_STOPTYPING)
     {
       strangerIsTyping = false;
+    }
+    else if(*packetId == PID_DISCONNECT)
+    {
+      sock.Disconnect();
     }
 
     return true;
@@ -262,7 +270,7 @@ namespace Omegle
       }
       else if(packetId == PID_DISCONNECT)
       {
-        throw ConversationOverError();
+        throw ConversationOverError(); //Not quite the most elegant use of exceptions.
       }
     }
 

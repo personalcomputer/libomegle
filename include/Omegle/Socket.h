@@ -1,15 +1,18 @@
 #pragma once
 #include <string>
+#include <cerrno>
+#include <cstring>
 
 #include "Error.h"
 
 namespace Omegle
 {
-  class SocketError : public Error {
+  class NetworkError : public Error {
     public:
-    std::string errnoMessage;
-    inline SocketError(const std::string errnoMessage): Error("network error: "+errnoMessage), errnoMessage(errnoMessage) {}
-    inline virtual ~SocketError() throw() {};
+    const int errsv; //(presumably recommended) naming from the errno manpage.
+    const std::string errnoMessage;
+    inline NetworkError(const int errsv): Error(std::string("network error: ")+strerror(errsv)), errsv(errsv), errnoMessage(strerror(errsv)) {}
+    inline virtual ~NetworkError() throw() {}
   };
 
   static const bool BLOCKING = true;
@@ -29,7 +32,7 @@ namespace Omegle
     void Connect(const std::string& address, const std::string& port);
     void Disconnect();
 
-    bool IsConnected();
+    bool IsConnected() const;
 
     size_t Recv(void* const buf, const size_t len, const bool blocking = BLOCKING); //returns the length of the received data. if it is less than the amount you wanted to received and you specified NONBLOCKING, then you'll just have to wait some more. Otherwise, it will return the amount you wanted to receive.
     void Send(const void* const buf, const size_t len);
