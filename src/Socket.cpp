@@ -38,9 +38,11 @@ namespace Omegle
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
-    if((getaddrinfo(address.c_str(), port.c_str(), &hints, &res) != 0) ||
-      ((sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1) ||
-      (connect(sock, res->ai_addr, res->ai_addrlen) != 0))
+    if((getaddrinfo(address.c_str(), port.c_str(), &hints, &res) != 0))
+    {
+      throw NetworkError(errno);
+    }
+    if(((sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1) || (connect(sock, res->ai_addr, res->ai_addrlen) != 0))
     {
       freeaddrinfo(res);
       throw NetworkError(errno);
