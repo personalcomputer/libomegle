@@ -51,12 +51,13 @@ namespace Omegle
     std::string key;
   };
 
-  static const unsigned int SERVER_COUNT = 3;
+  static const unsigned int SERVER_COUNT = 4;
   typedef unsigned int ServerId_t;
 
   static const ServerId_t SERVER_BAJOR = 0; //These are not an enum because there is no problem if you would like to simply iterate through all the servers and could care less about their names. //Q: Why not use an std::map then? A: Creation of a constant std::map is not fun. I'm not making libomegle depend upon C++11 and I'm not making it depend upon boost. There aren't many options left.
   static const ServerId_t SERVER_PROMENADE = 1;
   static const ServerId_t SERVER_CARDASSIA = 2;
+  static const ServerId_t SERVER_QUARKS = 3;
 
   class Connection
   {
@@ -74,10 +75,10 @@ namespace Omegle
 
     ##### Servers
 
-    Omegle operates 3 (known) servers to handle their load. The servers store bans and their CAPTCHA requirements separately for each server. This means if you would like to avoid such bans, you can connect to a different server. The available servers are "bajor.omegle.com", "promenade.omegle.com", and "cardassia.omegle.com". These can be selected when creating a connection by specifying the serverId to be either SERVER_BAJOR, SERVER_PROMENADE, or SERVER_CARDASSIA. bajor is preferred by default.
+    Omegle operates 4 (known) servers to handle their load. The servers store bans and their CAPTCHA requirements separately for each server. This means if you would like to avoid such bans, you can connect to a different server. The available servers are "bajor.omegle.com", "promenade.omegle.com", "cardassia.omegle.com", and "quarks.omegle.com". These can be selected when creating a connection by specifying the serverId to be either SERVER_BAJOR, SERVER_PROMENADE, or SERVER_CARDASSIA. bajor is preferred by default.
     
     ##### Raw Packet Handler
-    
+
     Although PollMessage() is fine for most uses, you may also be interested in handling other events in the conversation more directly (such as when the stranger starts and stops typing). This is possible through PollEvent(), which returns a parsed version of the packets Omegle sends. These packets are available:
 
     * PID_USERCOUNT
