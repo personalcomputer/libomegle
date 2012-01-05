@@ -12,7 +12,7 @@
 
 namespace Omegle
 {
-  static const std::string SERVERS[SERVER_COUNT] = {"bajor.omegle.com", "promenade.omegle.com", "cardassia.omegle.com", "quarks.omegle.com"};
+  static const std::string SERVERS[SERVER_COUNT] = {"bajor.omegle.com", "promenade.omegle.com", "cardassia.omegle.com", "quarks.omegle.com", "odo-bucket.omegle.com", "ferengi.omegle.com"};
   static const std::string PORT = "1365";
 
   static const int INIT_PACKET_ABTEST_LENGTH = 142;

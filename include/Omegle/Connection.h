@@ -51,13 +51,8 @@ namespace Omegle
     std::string key;
   };
 
-  static const unsigned int SERVER_COUNT = 4;
+  static const unsigned int SERVER_COUNT = 6;
   typedef unsigned int ServerId_t;
-
-  static const ServerId_t SERVER_BAJOR = 0; //These are not an enum because there is no problem if you would like to simply iterate through all the servers and could care less about their names. //Q: Why not use an std::map then? A: Creation of a constant std::map is not fun. I'm not making libomegle depend upon C++11 and I'm not making it depend upon boost. There aren't many options left.
-  static const ServerId_t SERVER_PROMENADE = 1;
-  static const ServerId_t SERVER_CARDASSIA = 2;
-  static const ServerId_t SERVER_QUARKS = 3;
 
   class Connection
   {
@@ -75,7 +70,7 @@ namespace Omegle
 
     ##### Servers
 
-    Omegle operates 4 (known) servers to handle their load. The servers store bans and their CAPTCHA requirements separately for each server. This means if you would like to avoid such bans, you can connect to a different server. The available servers are "bajor.omegle.com", "promenade.omegle.com", "cardassia.omegle.com", and "quarks.omegle.com". These can be selected when creating a connection by specifying the serverId to be either SERVER_BAJOR, SERVER_PROMENADE, SERVER_QUARKS, or SERVER_CARDASSIA. bajor is preferred by default.
+    Omegle operates a few different servers to handle their load. The servers store bans and their CAPTCHA requirements separately for each server. This means if you would like to avoid such bans, you can connect to a different server. To select which server to connect to specify a numeric 'serverId' to Connection's constructor. This id should be in the range [0, SERVER_COUNT).
     
     ##### Raw Packet Handler
 
@@ -99,7 +94,7 @@ namespace Omegle
     void SendPacket(const PacketId& packetId, const std::string& contents = "");
     
     public:
-    Connection(const ServerId_t serverId = SERVER_BAJOR);
+    Connection(const ServerId_t serverId = 0);
     ~Connection();
 
     void SendMessage(const std::string message);
