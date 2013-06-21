@@ -1,6 +1,12 @@
 libomegle Readme
 ================
 
+---
+
+###**NOTICE: This was written quite a while ago and the Omegle binary protocol (Flash sockets - this code doesn't use the web API) has almost certainly changed or been removed since then. libomegle is no longer maintained.**
+
+---
+
 libomegle is a little C++ (or python with provided bindings) library for interfacing with the 'Omegle' <http://omegle.com/> random-pairing instant messaging service.
 
 See the demos, demos/omegle-cli-client.cpp and demos/basic-chatbot.cpp
